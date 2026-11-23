@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Demo caja con código de barras</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--tx:#1c1c1c;--mu:#6b6b6b;--ac:#0f766e;--bd:#e2e0da;--ok:#166534;--er:#b91c1c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161616;--card:#222;--tx:#f0f0f0;--mu:#a0a0a0;--ac:#2dd4bf;--bd:#383838;--ok:#4ade80;--er:#f87171}}
+:root[data-theme="dark"]{--bg:#161616;--card:#222;--tx:#f0f0f0;--mu:#a0a0a0;--ac:#2dd4bf;--bd:#383838;--ok:#4ade80;--er:#f87171}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:14px}
+.wrap{max-width:900px;margin:auto;display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:0 0 10px}p{margin:0;color:var(--mu);font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+input{flex:1;min-width:150px;padding:12px;font-size:17px;border:2px solid var(--ac);border-radius:10px;background:var(--bg);color:var(--tx)}
+button{padding:12px 16px;font-size:15px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:600;cursor:pointer}
+button.sec{background:transparent;color:var(--tx);border:1px solid var(--bd)}
+#msg{margin-top:10px;font-weight:600;min-height:22px}
+#last{display:none;margin-top:10px;padding:14px;border-radius:10px;background:var(--bg);border:1px solid var(--bd)}
+#last .n{font-size:20px;font-weight:700}#last .p{font-size:32px;font-weight:800;color:var(--ac)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:8px 6px;border-bottom:1px solid var(--bd);text-align:left}th{color:var(--mu);font-weight:600}
+.r{text-align:right}.tot{font-size:22px;font-weight:800;text-align:right;margin-top:10px}
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.lab{border:1px dashed var(--bd);border-radius:8px;padding:8px;text-align:center;cursor:pointer;background:#fff;color:#111}
+.lab:hover{border-color:var(--ac)}.lab small{display:block;font-size:11px;color:#444}
+.lab svg{width:100%;height:60px}
+#reader{max-width:360px;margin-top:10px}
+#md{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:16px;z-index:20}#md .box{background:#fff;color:#111;border-radius:14px;padding:18px;text-align:center;width:min(480px,100%)}#md .box svg{width:100%;height:auto}#md .n{font-size:22px;font-weight:700}#md .p{font-size:40px;font-weight:800;color:#0f766e}#md .sec{color:#111;border-color:#ccc}
+@media print{.wrap>.card:not(#lc),#pr{display:none}body{padding:0;background:#fff}#lc{border:0;padding:0}.labels{display:block}.lab{width:50mm;height:30mm;border:0;border-bottom:1px dashed #999;border-radius:0;margin:0;break-inside:avoid;overflow:hidden}.lab svg{height:20mm}}
+</style></head><body><div class="wrap">
+<div class="card"><h1>Demo: caja con código de barras</h1>
+<p>Escaneá con la cámara, con un lector USB/Bluetooth (escribe solo y da Enter), o tocá una etiqueta de abajo para simular el escaneo. Las etiquetas no llevan precio.</p></div>
+
+<div class="card"><h2>Escanear</h2>
+<div class="row"><input id="cod" placeholder="Código (ej: 1001)" inputmode="numeric" autofocus>
+<button id="ok">Buscar</button><button class="sec" id="cam">Cámara</button></div>
+<div id="reader"></div><div id="msg"></div>
+<div id="last"><div class="n" id="ln"></div><div id="ld" style="color:var(--mu)"></div><div class="p" id="lp"></div></div></div>
+
+<div class="card"><h2>Ticket actual</h2><div class="tw"><table><thead><tr><th>Prenda</th><th>Talle</th><th class="r">Cant.</th><th class="r">Subtotal</th></tr></thead><tbody id="tk"></tbody></table></div>
+<div class="tot">Total: <span id="tt">$0</span></div>
+<div class="row" style="margin-top:10px"><button id="cob">Cobrar</button><button class="sec" id="lim">Vaciar</button></div></div>
+
+<div class="card"><h2>Stock</h2><div class="tw"><table><thead><tr><th>Código</th><th>Prenda</th><th>Talle</th><th class="r">Precio</th><th class="r">Stock</th></tr></thead><tbody id="st"></tbody></table></div></div>
+
+<div class="card" id="lc"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">Etiquetas (tocá para simular el escaneo)</h2><button class="sec" id="pr">Imprimir etiquetas</button></div><div class="labels" id="lb"></div></div>
+</div>
+<div id="md"><div class="box"><svg id="bg"></svg><div id="mn" class="n"></div><div id="md2" style="color:#555"></div><div id="mp" class="p"></div><div class="row" style="justify-content:center;margin-top:10px"><button id="ms">Simular escaneo</button><button class="sec" id="mx">Cerrar</button></div></div></div>
+<script>
+const P=[
+{c:"1001",n:"Remera hombre",t:"M (2)",d:"Negro",p:12500,s:10},
+{c:"1002",n:"Remera mujer",t:"M (2)",d:"Rosa",p:11000,s:2},
+{c:"1003",n:"Vaquero mujer",t:"42",d:"Negro",p:34000,s:3}];
+let T={};const $=i=>document.getElementById(i),m=n=>"$"+n.toLocaleString("es-AR");
+function msg(t,ok){const e=$("msg");e.textContent=t;e.style.color=ok?"var(--ok)":"var(--er)"}
+function scan(code){
+ code=String(code).trim();const x=P.find(p=>p.c===code);
+ if(!x){msg("Código "+code+" no cargado",false);$("last").style.display="none";return}
+ const used=T[code]||0;
+ if(used>=x.s){msg("Sin stock de "+x.n,false);return}
+ T[code]=used+1;msg("Agregado ✔",true);
+ $("last").style.display="block";$("ln").textContent=x.n;$("ld").textContent="Talle "+x.t+" · "+x.d;$("lp").textContent=m(x.p);
+ draw()}
+function draw(){
+ let tot=0,h="";
+ for(const c in T){const x=P.find(p=>p.c===c),s=x.p*T[c];tot+=s;h+=`<tr><td>${x.n}</td><td>${x.t}</td><td class="r">${T[c]}</td><td class="r">${m(s)}</td></tr>`}
+ $("tk").innerHTML=h||'<tr><td colspan="4" style="color:var(--mu)">Vacío</td></tr>';$("tt").textContent=m(tot);
+ $("st").innerHTML=P.map(x=>`<tr><td>${x.c}</td><td>${x.n}</td><td>${x.t}</td><td class="r">${m(x.p)}</td><td class="r">${x.s-(T[x.c]||0)}</td></tr>`).join("")}
+$("ok").onclick=()=>{scan($("cod").value);$("cod").value="";$("cod").focus()};
+$("cod").onkeydown=e=>{if(e.key==="Enter")$("ok").onclick()};
+$("lim").onclick=()=>{T={};draw();msg("",true);$("last").style.display="none"};
+$("cob").onclick=()=>{let t=0;for(const c in T){const x=P.find(p=>p.c===c);x.s-=T[c];t+=x.p*T[c]}
+ if(!t){msg("El ticket está vacío",false);return}T={};draw();$("last").style.display="none";msg("Venta cobrada: "+m(t)+" · stock descontado",true)};
+let sc=null;
+$("cam").onclick=async()=>{
+ try{if(sc){await sc.stop();sc=null;$("reader").innerHTML="";return}
+ sc=new Html5Qrcode("reader");let last=0;
+ await sc.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:120}},t=>{if(Date.now()-last>1500){last=Date.now();scan(t)}})}
+ catch(e){sc=null;msg("No pude abrir la cámara acá. En la tablet con el link directo debería andar.",false)}};
+$("lb").innerHTML=P.map(x=>`<div class="lab" data-c="${x.c}"><svg id="b${x.c}"></svg><small>${x.n} · ${x.t}</small></div>`).join("");
+P.forEach(x=>{try{JsBarcode("#b"+x.c,x.c,{format:"CODE128",height:50,displayValue:true,fontSize:14,margin:2})}catch(e){}});
+function big(c){const x=P.find(p=>p.c===c);JsBarcode("#bg",c,{format:"CODE128",height:130,width:3,displayValue:true,fontSize:22,margin:10});$("mn").textContent=x.n;$("md2").textContent="Talle "+x.t+" · "+x.d;$("mp").textContent=m(x.p);$("md").dataset.c=c;$("md").style.display="flex"}
+document.querySelectorAll(".lab").forEach(l=>l.onclick=()=>big(l.dataset.c));
+$("mx").onclick=()=>{$("md").style.display="none"};
+$("ms").onclick=()=>{scan($("md").dataset.c);$("md").style.display="none"};
+$("md").onclick=e=>{if(e.target.id==="md")$("md").style.display="none"};
+$("pr").onclick=()=>window.print();
+draw();
+</script></body></html>
